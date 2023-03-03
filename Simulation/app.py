@@ -1,7 +1,7 @@
 # Run this app with `python app.py` and
 # visit http://127.0.0.1:8050/ in your web browser.
 
-#Import Libraries
+# Import Libraries
 from dash import Dash, html, dcc, Input, Output
 import plotly.express as px
 import pandas as pd
@@ -10,18 +10,21 @@ import yfinance as yf
 from scipy.stats import norm
 import ssl
 
-#Formula for Black-Scholes Call Price
+
+# Formula for Black-Scholes Call Price
 def bs_call(S, K, T, r, vol):
     d1 = (np.log(S / K) + (r + 0.5 * vol ** 2) * T) / (vol * np.sqrt(T))
     d2 = d1 - vol * np.sqrt(T)
     return S * norm.cdf(d1) - np.exp(-r * T) * K * norm.cdf(d2)
 
-#Formula for Black-Scholes Call Delta
+
+# Formula for Black-Scholes Call Delta
 def bs_delta(S, K, T, r, sigma):
     d1 = (np.log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
     return norm.cdf(d1)
 
-#Function that obtains all tickers from S&P 500
+
+# Function that obtains all tickers from S&P 500
 def get_tickers():
     ssl._create_default_https_context = ssl._create_unverified_context
     table = pd.read_html('https://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
@@ -31,7 +34,8 @@ def get_tickers():
     ticker = df1["Symbol"].sort_values().values
     return ticker
 
-#Function that computes Option PnL, Hedging PnL and Total PnL
+
+# Function that computes Option PnL, Hedging PnL and Total PnL
 def PnL(data, volatility, log_moneyness):
     r = 0
     sigma = volatility
@@ -84,48 +88,49 @@ def PnL(data, volatility, log_moneyness):
 
     return df[["Option PnL", "Hedge PnL", "Total PnL", "Date"]]
 
+
 app = Dash(__name__)
 
-#Obtain the Tickers
+# Obtain the Tickers
 tickers = get_tickers()
 
-#Set all possible parameters for period, volatility, and log-moneyness
+# Set all possible parameters for period, volatility, and log-moneyness
 period = ["1mo", "3mo", "6mo", "1y", "2y", "5y", "10y"]
-vol_values = np.round(np.linspace(0.05,0.5,10),2)
-log_moneyness = np.round(np.linspace(-0.2,0.2,9),2)
+vol_values = np.round(np.linspace(0.05, 0.5, 10), 2)
+log_moneyness = np.round(np.linspace(-0.2, 0.2, 9), 2)
 
-#Originally start with Microsoft, one year period, volatility = 0.2, and log-moneyness = 0 (ATM)
+# Originally start with Microsoft, one year period, volatility = 0.2, and log-moneyness = 0 (ATM)
 data = yf.download("MSFT", interval="1d", period="1y")["Adj Close"]
 
-#Run unction that computes Option PnL, Hedging PnL and Total PnL
-df2 = PnL(data,0.2,0)
+# Run unction that computes Option PnL, Hedging PnL and Total PnL
+df2 = PnL(data, 0.2, 0)
 
-#Plot the original PnL
-fig = px.line(df2, x = "Date", y = ["Option PnL", "Hedge PnL", "Total PnL"], title='PnL Simulation')
+# Plot the original PnL
+fig = px.line(df2, x="Date", y=["Option PnL", "Hedge PnL", "Total PnL"], title='PnL Simulation')
 fig.update_layout(
 
-        legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right",x=1),
-        title={'text': "PnL Simulation",'y': 0.95,'x': 0.5,'xanchor': 'center','yanchor': 'top'},
-        legend_title="PnL",
-        xaxis_title="Date",
-        yaxis_title="PnL",)
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    title={'text': "PnL Simulation", 'y': 0.95, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+    legend_title="PnL",
+    xaxis_title="Date",
+    yaxis_title="PnL", )
 
 app.layout = html.Div(children=[
 
-    #Title
+    # Title
     html.H1(children='Delta Hedging Simulation',
             style={'textAlign': 'center', 'margin-top': '20px',
-            'margin-bottom': '0px',  'font-family': 'Arial, sans-serif'}),
+                   'margin-bottom': '0px', 'font-family': 'Arial, sans-serif'}),
 
-    #Input for Ticker
+    # Input for Ticker
     html.Div(children=[
         html.Br(),
         html.Label('Stock Ticker', style={'font-family': 'Arial, sans-serif'}),
-        dcc.Dropdown(tickers, "MSFT", id='ticker',style={'font-family': 'Arial, sans-serif'}),
+        dcc.Dropdown(tickers, "MSFT", id='ticker', style={'font-family': 'Arial, sans-serif'}),
 
     ], style={'width': '48%', 'display': 'inline-block'}),
 
-    #Input for Period
+    # Input for Period
     html.Div(children=[
         html.Br(),
         html.Label('Period', style={'font-family': 'Arial, sans-serif'}),
@@ -133,45 +138,45 @@ app.layout = html.Div(children=[
 
     ], style={'width': '48%', 'float': 'right', 'display': 'inline-block'}),
 
-    #Output for Graph with the PnL
+    # Output for Graph with the PnL
     html.Div(children=[
-        dcc.Graph(id='graphic',figure=fig),
+        dcc.Graph(id='graphic', figure=fig),
 
     ], style={'width': '100%', 'float': 'center', 'display': 'inline-block',
               'margin-top': '15px', 'margin-bottom': '-28px'}),
 
     html.Div(style={'textAlign': 'center'}, children=[
 
-        #Slider for the Volatility
+        # Slider for the Volatility
         html.Div(style={'width': '40%', 'display': 'inline-block'}, children=[
             html.H2(children='Volatility',
-                style={'textAlign': 'center', 'font-family': 'Arial, sans-serif'}),
+                    style={'textAlign': 'center', 'font-family': 'Arial, sans-serif'}),
             dcc.Slider(
-                min = 0.05,
-                max = 0.5,
+                min=0.05,
+                max=0.5,
                 step=None,
                 id='vol',
                 value=0.2,
                 marks={str(vol): str(vol) for vol in vol_values},
             ), ],
-        ),
+                 ),
 
-        #Slider for the Log-Moneyness
+        # Slider for the Log-Moneyness
         html.Div(style={'width': '40%', 'display': 'inline-block'}, children=[
             html.H2(children='Initial Log-Moneyness',
-                style={'textAlign': 'center', 'font-family': 'Arial, sans-serif'}),
+                    style={'textAlign': 'center', 'font-family': 'Arial, sans-serif'}),
             dcc.Slider(
-                min = -0.2,
-                max = 0.2,
+                min=-0.2,
+                max=0.2,
                 step=None,
                 id='logmoneyness',
                 value=0,
                 marks={str(moneyness): str(moneyness) for moneyness in log_moneyness},
             ), ],
-        ),
-        ],
-    ),
-    #Outputs all the additional information
+                 ),
+    ],
+             ),
+    # Outputs all the additional information
     html.Div(style={'textAlign': 'center', 'padding': '30px'}, children=[
 
         html.Div(id='stock-price-before', style={'padding': '10px', 'font-family': 'Arial, sans-serif'}),
@@ -180,26 +185,26 @@ app.layout = html.Div(children=[
         html.Div(id='stock-price-after', style={'padding': '10px', 'font-family': 'Arial, sans-serif'}),
         html.Div(id='option-price-after', style={'padding': '10px', 'font-family': 'Arial, sans-serif'}),
 
-        ],
-    ),
+    ],
+             ),
 ])
 
-#Inputs Ticker, Period, Volatility and Log-Moneyness and outputs PnL Graph
+
+# Inputs Ticker, Period, Volatility and Log-Moneyness and outputs PnL Graph
 @app.callback(Output('graphic', 'figure'),
               Input('ticker', 'value'),
               Input('time', 'value'),
               Input('vol', 'value'),
               Input('logmoneyness', 'value'))
-def update_graph(ticker, time, vol,logmoneyness):
-
-    #Downloads data from Yahoo Finance
+def update_graph(ticker, time, vol, logmoneyness):
+    # Downloads data from Yahoo Finance
     data = yf.download(ticker, interval="1d", period=time)["Adj Close"]
 
-    #Computes Option PnL, Hedge PnL, and Total PnL
-    final_df = PnL(data, vol,logmoneyness)
+    # Computes Option PnL, Hedge PnL, and Total PnL
+    final_df = PnL(data, vol, logmoneyness)
 
     # Plot the new updated PnL
-    fig = px.line(final_df, x = "Date", y = ["Option PnL", "Hedge PnL", "Total PnL"])
+    fig = px.line(final_df, x="Date", y=["Option PnL", "Hedge PnL", "Total PnL"])
     fig.update_layout(
 
         legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
@@ -210,7 +215,8 @@ def update_graph(ticker, time, vol,logmoneyness):
     )
     return fig
 
-#Inputs Ticker, Period, Volatility and Log-Moneyness and outputs additional information
+
+# Inputs Ticker, Period, Volatility and Log-Moneyness and outputs additional information
 @app.callback(Output('stock-price-before', 'children'),
               Output('stock-price-after', 'children'),
               Output('option-price-before', 'children'),
@@ -220,21 +226,21 @@ def update_graph(ticker, time, vol,logmoneyness):
               Input('time', 'value'),
               Input('vol', 'value'),
               Input('logmoneyness', 'value'))
-def callback_a(ticker, time, vol,logmoneyness):
-
+def callback_a(ticker, time, vol, logmoneyness):
     # Downloads data from Yahoo Finance
     data = yf.download(ticker, interval="1d", period=time)["Adj Close"]
     r = 0
     K = data[0] * np.exp(-1 * logmoneyness)
-    T = len(data)/252
-    option_price = bs_call(data[0],K,T,r,vol)
+    T = len(data) / 252
+    option_price = bs_call(data[0], K, T, r, vol)
 
-    #Output some information
-    return f"{ticker} price at beginning of simulation: {np.round(data[0],2)}",\
-           f"{ticker} price at end of simulation: {np.round(data[-1],2)}",\
-           f"Option price at beginning of simulation: {np.round(option_price,2)}",\
-           f"Option price at end of simulation: {np.round(max(data[-1]-K,0),2)}",\
-           f"Strike price at beginning of simulation: {np.round(K,2)}"
+    # Output some information
+    return f"{ticker} price at beginning of simulation: {np.round(data[0], 2)}", \
+           f"{ticker} price at end of simulation: {np.round(data[-1], 2)}", \
+           f"Option price at beginning of simulation: {np.round(option_price, 2)}", \
+           f"Option price at end of simulation: {np.round(max(data[-1] - K, 0), 2)}", \
+           f"Strike price at beginning of simulation: {np.round(K, 2)}"
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
